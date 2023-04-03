@@ -13,25 +13,10 @@ export default {
   data() {
     return {
       show_menu: false,
-      drag_pos: {x: 0, y: 0}
     }
   },
   methods: {
-    test() {
-      this.$request({
-        url: '/user/login',
-        method: 'post',
-        headers: {
-          isToken: false
-        },
-        data: {"userName":'lhd',"password":1234}
-      }).then(
-          resp => {
-            if(resp.code === 200)
-              console.log(111111)
-          }
-      )
-    }
+
   },
   mounted() {
 

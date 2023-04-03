@@ -30,25 +30,9 @@
               </template>
             </el-input>
           </el-form-item>
-          <el-form-item prop="captcha" v-if="captcha_image">
-            <el-input v-model="form.captcha" class="captcha-input form-input" placeholder="请输入验证码"
-                      @keyup.enter.native="handleLogin">
-              <template v-slot:prepend>
-                <el-icon class="el-icon-key icon"></el-icon>
-              </template>
-              <template v-slot:append>
-                <img :src="`data:image;base64,${captcha_image}`" alt="验证码" class="captcha-image"
-                     @click="handleRefreshCaptcha">
-              </template>
-            </el-input>
-          </el-form-item>
           <el-form-item class="submit-button">
             <el-button type="primary" @click="handleLogin">登录</el-button>
           </el-form-item>
-          <div v-if="login_type === 'user'" class="register">
-            还没有账号？
-            <el-button type="text" style="color: #3FB5E3" @click="handleRegister">立即注册</el-button>
-          </div>
         </el-form>
       </div>
     </transition>
@@ -57,40 +41,47 @@
 </template>
 
 <script>
+
 export default {
   name: "UserLogin",
   computed: {
     loginBackground() {
-      return  require('@/assets/img/user/login/bg.webp')
+      return require('@/assets/img/user/login/bg.webp')
+    }
+  },
+  watch: {
+    $route: {
+      handler: function(route) {
+        this.redirect = route.query && route.query.redirect
+      },
+      immediate: true
     }
   },
   data() {
     return {
       platform_name: 'DD-Platform',
-      login_type: '',
-      form: {captcha: ''},
-      captcha: {},
-      captcha_image: '',
+      form: {},
       rules: {
         username: [{required: true, message: '请输入用户名', trigger: 'blur'}],
         password: [{required: true, message: '请输入密码', trigger: 'blur'}],
-        captcha: [{required: true, message: '请输入验证码', trigger: 'blur'}]
       },
     }
   },
   methods: {
-    setFormCaptcha(value) {
-      this.$set(this.form, 'captcha', value)
-    },
     handleLogin() {
-      this.$emit('login', {form: this.form, login_type: this.login_type})
+      this.$refs.form.validate((valid) => {
+        if (valid) {
+          this.$store.dispatch('Login', this.form)
+              .then(() => {
+                this.$router.push({ path: this.redirect || '/' })
+                this.loading = false
+              })
+              .catch(() => {
+                this.loading = false
+              })
+        }
+      });
     },
-    handleRegister() {
-      this.$emit('clickRegister')
-    },
-    handleRefreshCaptcha() {
-      this.$emit('clickRefreshCaptcha')
-    }
   }
 }
 </script>

@@ -13,5 +13,8 @@ export default {
       this.localStorage().remove(TokenKey)
     else
       this.localStorage().set(TokenKey, token)
+  },
+  removeToken() {
+    this.localStorage().remove(TokenKey)
   }
 }

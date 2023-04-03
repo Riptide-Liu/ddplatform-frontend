@@ -1,19 +1,34 @@
 import axios from 'axios'
 import { Notification, MessageBox, Message } from 'element-ui'
 // import router from '@/router'
-import store from '../store'
 import auth from "@/utils/auth";
 import errorCode from '@/utils/errorCode'
+import store from "@/store";
+
+import JSONbig from 'json-bigint';
+
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 
+const JSONbigToString = JSONbig({ storeAsString: true })
 
 // 创建axios实例
 const service = axios.create({
   // axios中请求配置有baseURL选项，表示请求URL公共部分
-  baseURL: store.state.baseURL,
+  baseURL: process.env.VUE_APP_BASE_URL,
   // 超时
-  timeout: 10000
+  timeout: 10000,
+  transformResponse: [function (data) {
+    try {
+      //转换
+      return JSONbigToString.parse(data)
+
+    } catch (err) {
+      //转换失败就直接按原数据返回
+      return data;
+
+    }
+  }]
 })
 // request拦截器
 service.interceptors.request.use(config => {
@@ -42,10 +57,12 @@ service.interceptors.request.use(config => {
         }
       }
     }
+
     url = url.slice(0, -1)
     config.params = {}
     config.url = url
   }
+
   return config
 }, error => {
   console.log(error)
@@ -57,21 +74,22 @@ service.interceptors.response.use(res => {
   // 未设置状态码则默认成功状态
   const code = res.data.code || 200
   // 获取错误信息
-  const msg = errorCode[code] || res.data.msg || errorCode['default']
-  if (code === 401) {
+  const msg = errorCode[code] || res.data.message || errorCode['default']
+  if (code===401) {
     MessageBox.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', '系统提示', {
       confirmButtonText: '重新登录',
       cancelButtonText: '取消',
       type: 'warning'
     }
     ).then(() => {
-
-      // localStorage.setItem('logUrl', router.currentRoute.fullPath);
-      // router.push({
-      //   path: '/Login?login=1'
-      // });
-
-    }).catch(() => { })
+      store.dispatch('FedLogOut').then(() => {
+        location.href = `/user/login?redirect=${location.pathname}`
+      })
+    }).catch(() => {
+      store.dispatch('FedLogOut').then(() => {
+        location.href = `/user/login?redirect=${location.pathname}`
+      })
+    })
     return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
   } else if (code === 500) {
     Message({
@@ -79,16 +97,17 @@ service.interceptors.response.use(res => {
       type: 'error'
     })
     return Promise.reject(new Error(msg))
-  } else if (code !== 200) {
+  }
+  else if (code !== 200) {
     Notification.error({
       title: msg
     })
     return Promise.reject('error')
   } else {
     // 把字符串total 转换成 数字 total
-    if (res.data.data && res.data.data.total) {
-      res.data.data.total = parseInt(res.data.data.total)
-    }
+    // if (res.data.data && res.data.data.total) {
+    //   res.data.data.total = parseInt(res.data.data.total)
+    // }
     return res.data
   }
 },
