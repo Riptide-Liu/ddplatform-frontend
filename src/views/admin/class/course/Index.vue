@@ -2,24 +2,24 @@
 <div>
   <el-breadcrumb separator-class="el-icon-arrow-right">
     <el-breadcrumb-item :to="{ path: '/admin' }">首页</el-breadcrumb-item>
-    <el-breadcrumb-item :to="{ path: '/admin/course' }">课程管理</el-breadcrumb-item>
-    <el-breadcrumb-item>资源管理</el-breadcrumb-item>
+    <el-breadcrumb-item :to="{ path: '/admin/class' }">班级管理</el-breadcrumb-item>
+    <el-breadcrumb-item>课程计划管理</el-breadcrumb-item>
   </el-breadcrumb>
   <div style="margin-top: 16px">
     <div style="width: 100%;display: flex;justify-content: space-between;margin-bottom: 8px">
-      <el-input v-model="query_value" @keyup.enter.native="getCourseChapterItems"
+      <el-input v-model="query_value" @keyup.enter.native="getClassCourseItems"
                 placeholder="请输入关键字" style="width: 400px;">
         <template v-slot:prepend>
-          课程资源名
+          课程名
         </template>
         <template v-slot:append>
-          <el-button icon="el-icon-search" @click="getCourseChapterItems"></el-button>
+          <el-button icon="el-icon-search" @click="getClassCourseItems"></el-button>
         </template>
       </el-input>
       <div>
         <el-button v-if="selection.length" type="danger" @click="handleDelete(selectionIds)">删除</el-button>
-        <el-button icon="el-icon-refresh" @click="getCourseChapterItems"></el-button>
-        <el-button type="primary" @click="handleAdd">添加课程资源</el-button>
+        <el-button icon="el-icon-refresh" @click="getClassCourseItems"></el-button>
+        <el-button type="primary" @click="handleAdd">添加课程计划</el-button>
       </div>
 
     </div>
@@ -36,17 +36,21 @@
           width="55">
       </el-table-column>
       <el-table-column
-          prop="id"
-          show-overflow-tooltip
-          label="ID">
-      </el-table-column>
-      <el-table-column
           prop="name"
-          label="课程资源名">
+          label="课程名">
+        <template v-slot="{row}">
+          {{row.course.name}}
+        </template>
       </el-table-column>
       <el-table-column
-          prop="updateTime"
-          label="更新时间"
+          prop="startTime"
+          label="开始时间"
+          width="180"
+          show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column
+          prop="endTime"
+          label="结束时间"
           width="180"
           show-overflow-tooltip>
       </el-table-column>
@@ -58,10 +62,9 @@
       </el-table-column>
       <el-table-column
           label="操作"
-          width="180">
+          width="90">
         <template v-slot="{row}">
-          <el-button size="mini" type="primary" icon="el-icon-edit" @click="handleEdit(row)">编辑</el-button>
-          <el-button size="mini" type="danger"  icon="el-icon-delete" @click="handleDelete([row.id])">删除</el-button>
+          <el-button size="mini" type="danger"  icon="el-icon-delete" @click="handleDelete([row.course.id])">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -69,8 +72,8 @@
   <div style="margin-top: 16px;flex: 1">
     <el-pagination
         background
-        @size-change="getCourseChapterItems"
-        @current-change="getCourseChapterItems"
+        @size-change="getClassCourseItems"
+        @current-change="getClassCourseItems"
         :current-page.sync="page_num"
         :page-sizes="page_sizes"
         :page-size.sync="page_size"
@@ -81,18 +84,25 @@
 
   <!-- 添加或修改参数配置对话框 -->
   <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
-    <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-      <el-form-item
-          label="资源名称"
-      >
-        <el-input
-            v-model="form.name"
-            placeholder="请输入课程资源名称"
-            maxlength="30"
-        />
+    <el-form ref="form" :model="form" label-width="80px">
+      <el-form-item label="课程">
+        <el-select v-model="form.courseId" style="width: 100%" placeholder="请选择">
+          <el-option
+              v-for="item in course_items"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id">
+          </el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="资源上传">
-        <FileUpload :file-list="fileList" :limit="1" @upload-success="handleUploadSuccess"></FileUpload>
+      <el-form-item label="起止日期">
+        <el-date-picker
+            v-model="time_range"
+            type="datetimerange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :default-time="['12:00:00']">
+        </el-date-picker>
       </el-form-item>
     </el-form>
     <template v-slot:footer>
@@ -105,17 +115,16 @@
 </template>
 
 <script>
-import * as course_resource_request from "@/api/admin/course/resource";
+import * as class_course_request from "@/api/admin/class/course";
+import * as course_request from "@/api/admin/course";
 import {mapGetters} from "vuex";
-import FileUpload from "@/components/common/FileUpload.vue";
 
 export default {
   name: "UserIndex",
-  components: {FileUpload},
   computed: {
     ...mapGetters(['$text', 'token']),
-    courseId() {
-      return this.$route.params.course_id
+    classId() {
+      return this.$route.params.class_id
     },
     tableData() {
       let items = this.$lodash.cloneDeep(this.items)
@@ -123,12 +132,13 @@ export default {
         return []
       for(let item of items){
         item.createTime = this.$helper.parseTime(item.createTime)
-        item.updateTime = this.$helper.parseTime(item.updateTime)
+        item.startTime = this.$helper.parseTime(item.startTime)
+        item.endTime = this.$helper.parseTime(item.endTime)
       }
       return items
     },
     selectionIds() {
-      return this.selection.map(item => item.id)
+      return this.selection.map(item => item.course.id)
     },
     fileList() {
       return this.file_url?[this.file_url]:[]
@@ -144,29 +154,26 @@ export default {
       items: null,
       selection: [],
 
-
+      select_student: null,
       title: '',
       // 是否显示弹出层
       open: false,
-      rules: {
-        name: [
-          { required: true, message: '课程资源名称不能为空', trigger: 'blur' },
-          {
-            min: 2,
-            max: 20,
-            message: '课程资源名称长度必须介于 2 和 20 之间',
-            trigger: 'blur'
-          }
-        ],
-      },
+      time_range: [],
       form: {},
-      file_url: null
+      file_url: null,
+      course_items: null
     }
   },
   created() {
-    this.getCourseChapterItems()
+    this.getClassCourseItems()
   },
   methods: {
+    getALLCourseItems() {
+      course_request.listAll().then((resp) => {
+        if(resp.code === 200)
+          this.course_items = resp.data
+      })
+    },
     handleUploadSuccess(res) {
       this.form.fileKey = res.data
     },
@@ -178,24 +185,27 @@ export default {
     reset() {
       this.file_url = null
       this.form = {}
+      this.time_range = []
       this.$helper.resetForm(this.$refs.form)
     },
     submitForm: function() {
       this.$refs['form'].validate((valid) => {
         if (valid) {
-          this.form.courseId = this.courseId
+          this.form.classId = this.classId
           if (this.form.id !== undefined) {
-            course_resource_request.edit(this.form).then(() => {
+            class_course_request.edit(this.form).then(() => {
               this.$modal.msgSuccess('修改成功')
               this.open = false
-              this.getCourseChapterItems()
+              this.getClassCourseItems()
             })
           } else {
-            course_resource_request.add(this.form).then(() => {
+            this.form.startTime = this.time_range[0]
+            this.form.endTime = this.time_range[1]
+            class_course_request.add(this.form).then(() => {
               this.$modal.msgSuccess('新增成功')
               this.open = false
 
-              this.getCourseChapterItems()
+              this.getClassCourseItems()
             })
           }
         }
@@ -203,31 +213,36 @@ export default {
     },
     handleEdit(item) {
       this.reset()
-      this.title = '编辑课程资源'
+      this.getALLCourseItems()
+      this.title = '编辑课程计划'
       this.form = this.$lodash.cloneDeep(item)
-      this.file_url = {}
-      this.$set(this.file_url, 'name', item.fileKey)
-      this.$set(this.file_url, 'url', item.fileKey)
-
+      this.time_range[0] = item.startTime
+      this.time_range[1] = item.endTime
       this.open = true
 
     },
     handleAdd() {
       this.reset()
-      this.title = '添加课程资源'
+      this.getALLCourseItems()
+      this.title = '添加课程计划'
       this.open = true
     },
     handleDelete(ids) {
-      course_resource_request.del(ids).then(
+      let del_ids = []
+      ids.map(id => {
+        del_ids.push({courseId: id, classId: this.classId})
+      })
+      console.log(del_ids)
+      class_course_request.del(del_ids).then(
           resp => {
             if(resp.code === 200)
-              this.getCourseChapterItems()
+              this.getClassCourseItems()
           }
       )
     },
-    getCourseChapterItems() {
-      course_resource_request.list({
-        course_id: this.courseId,
+    getClassCourseItems() {
+      class_course_request.list({
+        class_id: this.classId,
         page_size: this.page_size,
         page_num: this.page_num,
         query_value: this.query_value

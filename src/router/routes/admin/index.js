@@ -7,6 +7,11 @@ export default [
         path: '/admin',
         component: () => import('@/views/admin/Index.vue'),
         children: [
+            {
+                path: '',
+                component: () => import('@/views/admin/user/Index'),
+                meta: {title: '用户管理'}
+            },
             ...user,
             ...classes,
             ...course

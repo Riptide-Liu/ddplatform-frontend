@@ -57,10 +57,27 @@
       </el-table-column>
       <el-table-column
           label="操作"
-          width="180">
+          width="260">
         <template v-slot="{row}">
           <el-button size="mini" type="primary" icon="el-icon-edit" @click="handleEdit(row)">编辑</el-button>
           <el-button size="mini" type="danger"  icon="el-icon-delete" @click="handleDelete([row.id])">删除</el-button>
+          <el-dropdown trigger="click" @command="(args) => handleCommand(args, row)">
+            <el-button type="primary" size="mini" style="margin-left: 10px">
+              更多<i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <template v-slot:dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="student">
+                  <el-icon class="el-icon-document"></el-icon>
+                  学生管理
+                </el-dropdown-item>
+                <el-dropdown-item command="course">
+                  <el-icon class="el-icon-date"></el-icon>
+                  课程计划
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -91,18 +108,6 @@
             maxlength="30"
         />
       </el-form-item>
-<!--      <el-form-item label="头像">-->
-<!--        <el-upload-->
-<!--            class="avatar-uploader"-->
-<!--            action="http://localhost:8081/file/upload"-->
-<!--            :headers="{token}"-->
-<!--            :show-file-list="false"-->
-<!--            :on-success="handleAvatarSuccess"-->
-<!--            :before-upload="beforeAvatarUpload">-->
-<!--          <img v-if="avatarUrl" :src="avatarUrl" class="avatar">-->
-<!--          <i v-else class="el-icon-plus avatar-uploader-icon"></i>-->
-<!--        </el-upload>-->
-<!--      </el-form-item>-->
     </el-form>
     <template v-slot:footer>
       <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -183,6 +188,18 @@ export default {
     this.getClassItems()
   },
   methods: {
+    handleCommand(command, item) {
+      let menu = {
+        'student': () => {
+          this.$router.push(`class/${item.id}/student`)
+        },
+        'course': () => {
+          this.$router.push(`class/${item.id}/course`)
+        },
+      }
+      if(menu[command])
+        menu[command]()
+    },
     cancel() {
       this.open = false
       this.reset()

@@ -66,10 +66,11 @@
       </el-table-column>
       <el-table-column
           label="操作"
-          width="180">
+          width="290">
         <template v-slot="{row}">
           <el-button size="mini" type="primary" icon="el-icon-edit" @click="handleEdit(row)">编辑</el-button>
           <el-button size="mini" type="danger"  icon="el-icon-delete" @click="handleDelete([row.id])">删除</el-button>
+          <el-button size="mini" type="success"  icon="el-icon-s-promotion" @click="handleAddToClass(row)">分配班级</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -93,11 +94,11 @@
       <el-row>
         <el-col :span="12">
           <el-form-item
-              v-if="form.id == undefined"
               label="用户名称"
               prop="username"
           >
             <el-input
+                :disabled="!(form.id == null)"
                 v-model="form.username"
                 placeholder="请输入用户名称"
                 maxlength="30"
@@ -106,7 +107,6 @@
         </el-col>
         <el-col :span="12">
           <el-form-item
-              v-if="form.id == undefined"
               label="用户密码"
               prop="password"
           >
@@ -142,6 +142,15 @@
       </el-row>
       <el-row>
         <el-col :span="12">
+          <el-form-item label="状态">
+            <el-radio-group v-model="form.status">
+              <el-radio :key="0" :label="0">正常</el-radio>
+              <el-radio :key="1" :label="1">停用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+        </el-col>
+        <el-col :span="12">
           <el-form-item label="用户性别">
             <el-select v-model="form.sex" placeholder="请选择">
               <el-option :key="'0'" label="男" :value="0" />
@@ -150,26 +159,10 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="状态">
-            <el-radio-group v-model="form.status">
-              <el-radio :key="0" :label="0">正常</el-radio>
-              <el-radio :key="1" :label="1">停用</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
       </el-row>
+
       <el-form-item label="头像">
-        <el-upload
-            class="avatar-uploader"
-            action="http://localhost:8081/file/upload"
-            :headers="{token}"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload">
-          <img v-if="avatarUrl" :src="avatarUrl" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
+        <FileUpload picture_mode :limit="1" :picture_url="avatarUrl" @upload-success="handleAvatarSuccess"></FileUpload>
       </el-form-item>
     </el-form>
     <template v-slot:footer>
@@ -178,16 +171,39 @@
     </template>
   </el-dialog>
 
+  <el-dialog title="选择班级" :visible.sync="open_class" width="450px" append-to-body>
+    <el-form ref="form" :model="class_form" label-width="80px">
+      <el-form-item label="班级">
+        <div style="display: flex;width: 100%;justify-content: space-between">
+          <el-select v-model="class_form.classId" placeholder="请选择">
+            <el-option
+                v-for="item in class_items"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id">
+            </el-option>
+          </el-select>
+          <el-button type="primary" @click="submitToClassForm">确 定</el-button>
+        </div>
+
+      </el-form-item>
+
+    </el-form>
+  </el-dialog>
 </div>
 </template>
 
 <script>
 import * as user_request from "@/api/admin/user";
+import * as class_request from "@/api/admin/class/index";
+import * as class_student_request from "@/api/admin/class/student";
 import {mapGetters} from "vuex";
 import {getFileUrl} from "@/api/file";
+import FileUpload from "@/components/common/FileUpload.vue";
 
 export default {
   name: "UserIndex",
+  components: {FileUpload},
   computed: {
     ...mapGetters(['$text', 'token']),
     tableData() {
@@ -219,7 +235,6 @@ export default {
       items: null,
       selection: [],
 
-
       title: '',
       // 是否显示弹出层
       open: false,
@@ -250,27 +265,28 @@ export default {
         ],
       },
       form: {status:0,userType:2},
+      open_class: false,
+      class_form: {userId: null, classId: null},
+      class_items: null
     }
   },
   created() {
     this.getUserItems()
   },
   methods: {
-    handleAvatarSuccess(res) {
-      this.form.avatar = res.data
-      // this.imageUrl = URL.createObjectURL(file.raw);
+    handleAddToClass(item) {
+      this.getALLClassItems()
+      this.class_form.userId = item.id
+      this.open_class = true
     },
-    beforeAvatarUpload(file) {
-      const isJPG = file.type === 'image/jpeg';
-      const isLt2M = file.size / 1024 / 1024 < 2;
-
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!');
-      }
-      if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 2MB!');
-      }
-      return isJPG && isLt2M;
+    getALLClassItems() {
+      class_request.listAll().then((resp) => {
+        if(resp.code === 200)
+          this.class_items = resp.data
+      })
+    },
+    handleAvatarSuccess(res) {
+      this.$set(this.form, 'avatar', res.data)
     },
     cancel() {
       this.open = false
@@ -280,6 +296,13 @@ export default {
     reset() {
       this.form = {status:0,userType:2}
       this.$helper.resetForm(this.$refs.form)
+    },
+    submitToClassForm() {
+      class_student_request.add(this.class_form).then(() => {
+        this.$modal.msgSuccess('修改成功')
+        this.open_class = false
+        this.class_form = {userId: null, classId: null}
+      })
     },
     submitForm: function() {
       this.$refs['form'].validate((valid) => {
@@ -339,27 +362,5 @@ export default {
 </script>
 
 <style scoped>
-.avatar-uploader /deep/ .el-upload {
-  border: 1px dashed #d9d9d9;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.avatar-uploader /deep/ .el-upload:hover {
-  border-color: #409EFF;
-}
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 178px;
-  line-height: 178px;
-  text-align: center;
-}
-.avatar {
-  width: 178px;
-  height: 178px;
-  display: block;
-}
+
 </style>

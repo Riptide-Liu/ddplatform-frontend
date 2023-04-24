@@ -46,13 +46,14 @@ export default {
         //       roles:[]},
         //   ]
         // },
-        {
-          title: '课程模块', icon: 'el-icon-menu',
-          children: [
-            {path: '/admin/course', title: '课程管理', icon: 'el-icon-s-order',},
-            // {path: '/admin/course/resource', title: '课程资源管理', icon: 'el-icon-document',},
-          ]
-        },
+        {path: '/admin/course', title: '课程管理', icon: 'el-icon-s-order',}
+        // {
+        //   title: '课程模块', icon: 'el-icon-menu',
+        //   children: [
+        //     {path: '/admin/course', title: '课程管理', icon: 'el-icon-s-order',},
+        //     // {path: '/admin/course/resource', title: '课程资源管理', icon: 'el-icon-document',},
+        //   ]
+        // },
         // {path: '/admin', title: '系统状态', icon: 'el-icon-warning-outline',
         //   roles:[]},
       ],

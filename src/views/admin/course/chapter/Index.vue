@@ -29,27 +29,23 @@
           </template>
         </el-dropdown>
         <el-button style="float: right; padding: 3px 0" type="text"
-                   @click="$refs.lesson_dialog.open(null, chapter.id)">添加单元
+                   @click="$refs.unit_dialog.open(chapter.id)">添加单元
         </el-button>
       </template>
-      <el-empty v-if="chapter.lessons.length === 0" description="空"></el-empty>
-      <div v-else v-for="lesson in chapter.lessons" :key="lesson.id" class="text item">
+      <el-empty v-if="chapter.unit.length === 0" description="空"></el-empty>
+      <div v-else v-for="lesson in chapter.unit" :key="lesson.id" class="text item">
         <el-row :gutter="20">
           <el-col :span="20">
             <span class="card-text">{{ lesson.title }}</span>
           </el-col>
           <el-col :span="4">
             <el-dropdown style="margin-left: 8px; " trigger="click"
-                         @command="cmd => handleLessonOperation(lesson, cmd)">
+                         @command="cmd => handleLessonOperation(chapter,lesson, cmd)">
               <el-button type="text" style="padding: 0">
                 操作<i class="el-icon-arrow-down el-icon--right"></i>
               </el-button>
               <template v-slot:dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="resource">
-                    <el-icon class="el-icon-s-operation"></el-icon>
-                    资源管理
-                  </el-dropdown-item>
                   <el-dropdown-item command="edit">
                     <el-icon class="el-icon-edit"></el-icon>
                     编辑
@@ -66,8 +62,10 @@
       </div>
     </el-card>
   </div>
-  <el-empty v-else></el-empty>
-
+  <el-empty v-else>
+    <el-button type="primary" @click="handleAdd">添加章节</el-button>
+  </el-empty>
+  <el-button v-if="items && items.length" type="primary" @click="handleAdd">添加章节</el-button>
   <!-- 添加或修改参数配置对话框 -->
   <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
     <el-form ref="form" :model="form" :rules="rules" label-width="100px">
@@ -80,32 +78,25 @@
             maxlength="30"
         />
       </el-form-item>
-      <el-form-item label="章节上传">
-        <el-upload
-            action="http://localhost:8081/file/upload"
-            :headers="{token}"
-            :limit="1"
-            :file-list="fileList"
-            :on-success="handleUploadSuccess">
-          <el-button size="small" type="primary">点击上传</el-button>
-        </el-upload>
-      </el-form-item>
     </el-form>
     <template v-slot:footer>
       <el-button type="primary" @click="submitForm">确 定</el-button>
       <el-button @click="cancel">取 消</el-button>
     </template>
   </el-dialog>
-
+  <UnitDialog ref="unit_dialog" @finish="getCourseChapterItems"></UnitDialog>
 </div>
 </template>
 
 <script>
 import * as course_chapter_request from "@/api/admin/course/chapter";
 import {mapGetters} from "vuex";
+import UnitDialog from "@/components/admin/course/UnitDialog.vue";
+import * as unit_request from "@/api/admin/course/unit";
 
 export default {
   name: "UserIndex",
+  components: {UnitDialog},
   computed: {
     ...mapGetters(['$text', 'token']),
     courseId() {
@@ -161,8 +152,19 @@ export default {
     this.getCourseChapterItems()
   },
   methods: {
-    handleChapterOperation(cmd) {
-      console.log(cmd)
+    handleLessonOperation(chapter,item, cmd) {
+      let menu = {
+        edit: () => this.$refs.unit_dialog.open(chapter.id, item),
+        delete: () => this.deleteUnit([item.id]),
+      }
+      menu[cmd]()
+    },
+    handleChapterOperation(item, cmd) {
+      let menu = {
+        edit: () => this.handleEdit(item),
+        delete: () => this.handleDelete([item.id]),
+      }
+      menu[cmd]()
     },
     handleUploadSuccess(res) {
       this.form.fileKey = res.data
@@ -211,6 +213,15 @@ export default {
       this.title = '添加课程章节'
       this.open = true
     },
+    deleteUnit(ids) {
+      unit_request.del(ids).then(
+          resp => {
+            if(resp.code === 200)
+              this.getCourseChapterItems()
+          }
+      )
+    },
+
     handleDelete(ids) {
       course_chapter_request.del(ids).then(
           resp => {
@@ -227,7 +238,8 @@ export default {
         query_value: this.query_value
       }).then((resp) => {
         if (resp.code === 200) {
-          this.items = resp.data.items
+          console.log(resp.data)
+          this.items = resp.data
           this.total = resp.data.total
           this.page_size = resp.data.pageSize
           this.page_num = resp.data.pageNum

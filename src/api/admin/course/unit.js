@@ -1,6 +1,6 @@
 import request from "@/utils/request";
-let base_url = '/admin/course'
-// 查询课程列表
+let base_url = '/admin/chapter/unit'
+// 查询章节单元列表
 export function list(query) {
     return request({
         url: `${base_url}/list`,
@@ -8,22 +8,15 @@ export function list(query) {
         params: query
     })
 }
-
-export function listAll() {
-    return request({
-        url: `${base_url}/list/all`,
-        method: 'get',
-    })
-}
-// 查询课程详细
-export function get(classId) {
+// 查询章节单元详细
+export function get(id) {
     return request({
         url: `${base_url}/item`,
         method: 'get',
-        params: {id: classId}
+        params: {id}
     })
 }
-// 新增课程
+// 新增章节单元
 export function add(data) {
     return request({
         url: `${base_url}/add`,
@@ -31,7 +24,7 @@ export function add(data) {
         data: data
     })
 }
-// 编辑课程
+// 编辑章节单元
 export function edit(data) {
     return request({
         url: `${base_url}/edit`,
@@ -39,7 +32,7 @@ export function edit(data) {
         data: data
     })
 }
-// 删除课程
+// 删除章节单元
 export function del(ids) {
     return request({
         url: `${base_url}/delete`,

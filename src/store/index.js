@@ -18,6 +18,7 @@ const module = {
         permissions: [],
         text: text,
         constant: constant,
+        uploadAction: `${process.env.VUE_APP_BASE_URL}file/upload`
     },
     mutations: {
         SET_USER_INFO: (state, user_info) => {

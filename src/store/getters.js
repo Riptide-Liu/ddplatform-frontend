@@ -6,5 +6,6 @@ const getters = {
   roles: state => state.roles,
   $text: state => state.text,
   $constant: state => state.constant,
+  uploadAction: state => state.uploadAction,
 }
 export default getters

@@ -1,6 +1,7 @@
 
 export default {
 
+
   // 日期格式化
   parseTime(time, pattern) {
     if (arguments.length === 0 || !time) {

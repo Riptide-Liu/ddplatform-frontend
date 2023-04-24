@@ -123,16 +123,7 @@
         />
       </el-form-item>
       <el-form-item label="封面图片">
-        <el-upload
-            class="avatar-uploader"
-            action="http://localhost:8081/file/upload"
-            :headers="{token}"
-            :show-file-list="false"
-            :on-success="handleUploadSuccess"
-            :before-upload="beforeUpload">
-          <img v-if="imageUrl" :src="imageUrl" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
+        <FileUpload picture_mode :picture_url="imageUrl" @upload-success="handleUploadSuccess"></FileUpload>
       </el-form-item>
     </el-form>
     <template v-slot:footer>
@@ -148,9 +139,11 @@
 import * as course_request from "@/api/admin/course/index";
 import {mapGetters} from "vuex";
 import {getFileUrl} from "@/api/file";
+import FileUpload from "@/components/common/FileUpload.vue";
 
 export default {
   name: "UserIndex",
+  components: {FileUpload},
   computed: {
     ...mapGetters(['$text', 'token']),
     tableData() {
@@ -215,7 +208,7 @@ export default {
       return isJPG && isLt2M;
     },
     handleUploadSuccess(res) {
-      this.form.imageKey = res.data
+      this.$set(this.form, 'imageKey', res.data)
     },
     handleCommand(command, item) {
       let menu = {

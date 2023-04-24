@@ -21,12 +21,12 @@
               ></el-avatar>
               {{ userInfo.nickname ? userInfo.nickname : userInfo.username }}
             </template>
-            <el-menu-item index="edit">
-              <i class="el-icon-edit"></i> 用户信息
-            </el-menu-item>
-            <el-menu-item index="change_password">
-              <i class="el-icon-key"></i> 修改密码
-            </el-menu-item>
+<!--            <el-menu-item index="edit">-->
+<!--              <i class="el-icon-edit"></i> 用户信息-->
+<!--            </el-menu-item>-->
+<!--            <el-menu-item index="change_password">-->
+<!--              <i class="el-icon-key"></i> 修改密码-->
+<!--            </el-menu-item>-->
             <el-menu-item index="logout">
               <i class="el-icon-switch-button"></i> 注销
             </el-menu-item>
@@ -45,7 +45,6 @@
 </template>
 
 <script>
-import auth from "@/utils/auth";
 import {mapGetters} from "vuex";
 import BaseMenu from "@/components/admin/common/BaseMenu.vue";
 import {getFileUrl} from "@/api/file";
@@ -67,8 +66,9 @@ export default {
         this.$refs.change_pwd_dialog.open();
         this.$refs.menu.activeIndex = '';
       } else if (index === 'logout') {
-        auth.setToken(null);
-        this.$router.push('/user/login');
+        this.$store.dispatch('LogOut').then(() => {
+          this.$router.push('/user/login');
+        })
       } else if (String(index).startsWith('/')) {
         this.$router.push(index);
       }
