@@ -35,9 +35,9 @@
           <el-menu-item index="/admin" v-if="isAdmin">
             <i class="el-icon-setting"></i> 管理后台
           </el-menu-item>
-<!--          <el-menu-item index="edit">-->
-<!--            <i class="el-icon-edit"></i> 用户信息-->
-<!--          </el-menu-item>-->
+          <el-menu-item index="edit">
+            <i class="el-icon-edit"></i> 用户信息
+          </el-menu-item>
 <!--          <el-menu-item index="change_password">-->
 <!--            <i class="el-icon-key"></i> 修改密码-->
 <!--          </el-menu-item>-->
@@ -52,21 +52,21 @@
         </el-menu-item>
       </template>
     </el-menu>
-<!--    <ChangePasswordDialog ref="change_pwd_dialog"></ChangePasswordDialog>-->
-<!--    <EditDrawer v-if="userInfo" ref="edit_info" :user_info="userInfo"></EditDrawer>-->
+    <ChangePasswordDialog ref="change_pwd_dialog"></ChangePasswordDialog>
+    <EditDrawer v-if="userInfo" ref="edit_info" :user_info="userInfo"></EditDrawer>
   </div>
 </template>
 
 <script>
-// import ChangePasswordDialog from "@/components/common/user/ChangePasswordDialog";
-// import EditDrawer from "@/components/common/user/EditDrawer";
 import {ROLE_TYPE_ADMIN, ROLE_TYPE_TEACHER} from "@/res/constant";
 import {mapGetters} from "vuex";
 import {CHANGE_MENUBAR, SHOW_TITLE} from "@/res/event-types";
 import {getFileUrl} from "@/api/file";
+import ChangePasswordDialog from "@/components/common/ChangePasswordDialog.vue";
+import EditDrawer from "@/components/common/EditDrawer.vue";
 export default {
   name: "FrontendHeader",
-  // components: {ChangePasswordDialog, EditDrawer},
+  components: {ChangePasswordDialog, EditDrawer},
   computed: {
     ...mapGetters([
       'userInfo',

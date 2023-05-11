@@ -39,7 +39,7 @@
           prop="name"
           label="课程名">
         <template v-slot="{row}">
-          {{row.course.name}}
+          {{row.course && row.course.name?row.course.name:'（课程已删除）'}}
         </template>
       </el-table-column>
       <el-table-column
@@ -62,9 +62,10 @@
       </el-table-column>
       <el-table-column
           label="操作"
-          width="90">
+          width="100">
         <template v-slot="{row}">
-          <el-button size="mini" type="danger"  icon="el-icon-delete" @click="handleDelete([row.course.id])">删除</el-button>
+<!--          <el-button size="mini" type="primary" icon="el-icon-edit" @click="handleEdit(row)">编辑</el-button>-->
+          <el-button size="mini" type="danger" icon="el-icon-delete" @click="handleDelete([row.course.id])">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -159,7 +160,7 @@ export default {
       // 是否显示弹出层
       open: false,
       time_range: [],
-      form: {},
+      form: {courseId: null},
       file_url: null,
       course_items: null
     }
@@ -192,6 +193,9 @@ export default {
       this.$refs['form'].validate((valid) => {
         if (valid) {
           this.form.classId = this.classId
+          this.form.startTime = this.time_range[0]
+          this.form.endTime = this.time_range[1]
+          console.log(this.form)
           if (this.form.id !== undefined) {
             class_course_request.edit(this.form).then(() => {
               this.$modal.msgSuccess('修改成功')
@@ -199,8 +203,6 @@ export default {
               this.getClassCourseItems()
             })
           } else {
-            this.form.startTime = this.time_range[0]
-            this.form.endTime = this.time_range[1]
             class_course_request.add(this.form).then(() => {
               this.$modal.msgSuccess('新增成功')
               this.open = false
@@ -215,7 +217,8 @@ export default {
       this.reset()
       this.getALLCourseItems()
       this.title = '编辑课程计划'
-      this.form = this.$lodash.cloneDeep(item)
+      this.form.id = item.id
+      this.$set(this.form, 'courseId', item.course.id)
       this.time_range[0] = item.startTime
       this.time_range[1] = item.endTime
       this.open = true
@@ -232,7 +235,6 @@ export default {
       ids.map(id => {
         del_ids.push({courseId: id, classId: this.classId})
       })
-      console.log(del_ids)
       class_course_request.del(del_ids).then(
           resp => {
             if(resp.code === 200)

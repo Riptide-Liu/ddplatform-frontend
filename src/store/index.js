@@ -74,7 +74,6 @@ const module = {
                 logout(state.token).then(() => {
                     commit('SET_TOKEN', '')
                     commit('SET_ROLES', [])
-                    commit('SET_PERMISSIONS', [])
                     auth.removeToken()
                     resolve()
                 }).catch(error => {

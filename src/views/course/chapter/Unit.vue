@@ -1,35 +1,45 @@
 <template>
-  <el-card style="border-radius: 16px;min-height: calc(100vh - 100px);">
-    <template v-slot:header>
-      <el-page-header @back="$router.push(`/course/${courseId}`)" :content="unitItem.title">
-      </el-page-header>
-
-    </template>
-    <div class="borderBox" v-if="unitItem.content">
-      <span style="font-weight: bold">内容：</span>
-      <div style="margin: 16px">
-        {{unitItem.content}}
+  <div>
+ 
+    <el-card style="border-radius: 16px;min-height: calc(100vh - 100px);">
+      <template v-slot:header>
+        <div>
+          <div>
+            <el-page-header @back="$router.push(`/course/${courseId}`)">
+              <template v-slot:content>
+                <span style="font-weight: bold;font-size: 22px">{{ unitItem.title }}</span>
+              </template>
+            </el-page-header>
+        
+          </div>
+          <div style="font-size: 14px;color: gray;margin-top: 12px">
+            <span>更新时间：{{ unitItem.updateTime }}</span>
+            <span style="margin-left: 20px;">创建时间：{{ unitItem.createTime }}</span>
+          </div>
+        </div>
+      </template>
+      <div v-if="unitItem.content">
+        <Content :content="unitItem.content"></Content>
       </div>
-    </div>
-    <div style="font-weight: bold;margin-bottom: 16px">课件：</div>
-    <div class="file-preview " v-if="unitItem.fileUrl">
-      <embed style="height: 100%;width: 100%;" type="application/pdf" :src="unitItem.fileUrl" />
-<!--      <XdocView v-if="unitItem"  src="http://rsaaqbr24.bkt.clouddn.com/基于springboot+vue的教学辅助平台刘华东.doc" />-->
-    </div>
-    <el-empty v-else description="暂无课件"></el-empty>
+      <div style="margin-bottom: 16px"></div>
+      <div class="file-preview " v-if="unitItem.fileUrl">
+        <embed style="height: 100%;width: 100%;" type="application/pdf" :src="unitItem.fileUrl" />
+      </div>
 
-
-  </el-card>
+    </el-card>
+  </div>
+ 
 </template>
 
 
 <script>
-// import XdocView from "@/components/common/XdocView.vue";
 import * as unit_request from "@/api/admin/course/unit";
 import {getFileUrl} from "@/api/file";
+import {HIDE_ASIDE, SHOW_TITLE} from "@/res/event-types";
+import Content from "@/components/common/Content.vue";
 export default {
   name: "ChapterUnit",
-  // components: {XdocView},
+  components: {Content},
   computed: {
     unitId() {
       return this.$route.params.unit_id
@@ -42,6 +52,8 @@ export default {
       if(!item)
         item = {}
       item.fileUrl = item.fileKey? getFileUrl(item.fileKey): null
+      item.createTime = this.$helper.parseTime(item.createTime)
+      item.updateTime = this.$helper.parseTime(item.updateTime)
       return item
     },
   },
@@ -51,7 +63,12 @@ export default {
     }
   },
   created() {
+    this.$bus.$emit(HIDE_ASIDE, true)
     this.getItem()
+  },
+  beforeDestroy() {
+    this.$bus.$emit(HIDE_ASIDE, false)
+    this.$bus.$emit(SHOW_TITLE, null)
   },
   methods: {
     getItem() {

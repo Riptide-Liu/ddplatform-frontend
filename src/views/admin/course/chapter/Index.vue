@@ -238,7 +238,6 @@ export default {
         query_value: this.query_value
       }).then((resp) => {
         if (resp.code === 200) {
-          console.log(resp.data)
           this.items = resp.data
           this.total = resp.data.total
           this.page_size = resp.data.pageSize

@@ -1,20 +1,26 @@
 <template>
-  <el-upload
-      :class="picture_mode?'avatar-uploader':''"
-      :action="uploadAction"
-      :headers="{token}"
-      :show-file-list="!picture_mode"
-      v-bind="$attrs"
-      :on-success="handleUploadSuccess"
-      :before-upload="beforeUpload">
+  <div>
+    <el-upload
+        :class="picture_mode?'avatar-uploader':''"
+        :action="uploadAction"
+        :headers="{token}"
+        :show-file-list="!picture_mode"
+        v-bind="$attrs"
+        :on-success="handleUploadSuccess"
+        :before-upload="beforeUpload">
+      <template v-if="picture_mode">
+        <img v-if="picture_url" :src="picture_url" class="avatar">
+        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      </template>
+      <template v-else>
+        <el-button size="small" type="primary">点击上传</el-button>
+      </template>
+    </el-upload>
     <template v-if="picture_mode">
-      <img v-if="picture_url" :src="picture_url" class="avatar">
-      <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      <el-button v-if="picture_url" @click="handleRemove">清除</el-button>
     </template>
-    <template v-else>
-      <el-button size="small" type="primary">点击上传</el-button>
-    </template>
-  </el-upload>
+  </div>
+ 
 </template>
 
 <script>
@@ -32,6 +38,9 @@ export default {
     ...mapGetters(['token', 'uploadAction']),
   },
   methods: {
+    handleRemove(value,file_list){
+      this.$emit('remove-file',file_list, value);
+    },
     beforeUpload(file) {
       if(this.picture_mode)
         return this.beforeAvatarUpload(file)
@@ -52,8 +61,7 @@ export default {
       const isJPG = file.type === 'image/jpeg';
       const isPNG = file.type === 'image/png';
       const isLt3M = file.size / 1024 / 1024 < 3;
-
-      if (!isJPG || !isPNG) {
+      if (!isJPG && !isPNG) {
         this.$message.error('上传头像图片只能是 JPG 或 PNG 格式!');
       }
       if (!isLt3M) {

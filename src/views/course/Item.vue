@@ -17,23 +17,13 @@
                     </el-tooltip>
                     <div class="description">
                       <el-scrollbar style="height: 130px;">
-                        <div >{{ courseInfo.description }}</div>
+                        <Content :content="courseInfo.description"></Content>
                       </el-scrollbar>
                     </div>
 
-                    <div class="content-footer" style="display: flex;line-height: 60px;justify-content: space-between;width: 100%">
-                      <!--                        <div>-->
-                      <!--                          <span>-->
-                      <!--                        <i style="font-size: 16px" class="el-icon-star-on"></i>-->
-                      <!--                        难度: {{ courseInfo.difficulty }}-->
-                      <!--                        <template v-if="courseInfo.lesson_nums">-->
-                      <!--                          · 理论课: {{ courseInfo.lesson_nums.theory }}节-->
-                      <!--                          · 实训课: {{ courseInfo.lesson_nums.operate }}节-->
-                      <!--                          · 总计: {{ courseInfo.lesson_nums.all }}节-->
-                      <!--                        </template>-->
-                      <!--                          </span>-->
-                      <!--                        </div>-->
-
+                    <div class="content-footer" style="text-align: right;width: 100%">
+                      <span>更新时间: {{ courseInfo.updateTime }}</span>
+                      <span style="margin-left: 30px">创建时间: {{ courseInfo.createTime }}</span>
                     </div>
                   </div>
                 </div>
@@ -96,11 +86,12 @@ import {CHANGE_MENUBAR, SHOW_TITLE} from "@/res/event-types";
 import * as chapter_request from "@/api/admin/course/chapter";
 import * as course_request from "@/api/course";
 import {getFileUrl} from "@/api/file";
+import Content from "@/components/common/Content.vue";
 
 
 export default {
   name: "CourseItem",
-  components: {ChapterList},
+  components: {Content, ChapterList},
   computed: {
     courseId() {
       return this.$route.params.course_id
@@ -109,19 +100,11 @@ export default {
       let item = this.$lodash.cloneDeep(this.course_item)
       if(!item)
         item = {}
-      item.image = item.imageKey?getFileUrl(item.imageKey):null
+      item.image = item.imageKey?getFileUrl(item.imageKey): require('@/assets/sign.png')
+      item.createTime = this.$helper.parseTime(item.createTime)
+      item.updateTime = this.$helper.parseTime(item.updateTime)
       return item;
     },
-    progress() {
-      let result = this.learn_progress
-      if (result) {
-        let percentage = result.total_progress * 100 || 0
-        percentage = percentage > 100 ? 100 : percentage
-        result.percentage = percentage
-      }
-      return result
-    },
-
   },
   watch: {
     '$route'(nv, ov) {
@@ -137,7 +120,6 @@ export default {
       chapter_items: [],
       note_items: [],
       active_name: 'course',
-      learn_progress: {},
       menu_top: 'auto',
       change_menu_top:false,
       total: 0,
@@ -153,17 +135,14 @@ export default {
   beforeDestroy() {
     this.$bus.$off('content-scroll',this.handleContentScroll)
     this.$bus.$emit(CHANGE_MENUBAR, false)
-    this.$bus.$emit(SHOW_TITLE, null)
-    window.removeEventListener('scroll', this.windowScroll);
   },
   mounted() {
     this.$bus.$on('content-scroll',this.handleContentScroll)
-    window.addEventListener('scroll', this.windowScroll)
   },
   methods: {
     handleContentScroll(content) {
       let scrollTop = content.scrollTop
-      if (scrollTop >= 176) {
+      if (scrollTop >= 80) {
         this.$bus.$emit(CHANGE_MENUBAR, true)
         this.$bus.$emit(SHOW_TITLE, this.courseInfo.name || null)
       }else {

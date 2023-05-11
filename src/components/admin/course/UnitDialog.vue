@@ -13,11 +13,7 @@
       <el-form-item
           label="内容"
       >
-        <el-input
-            v-model="form.content"
-            placeholder="请输入课程单元内容"
-            maxlength="30"
-        />
+        <Editor v-model="form.content" placeholder="请输入课程单元内容" style="padding-top: 8px;margin-bottom: -8px"></Editor>
       </el-form-item>
       <el-form-item label="课件上传">
         <FileUpload pdf_mode :file-list="fileList" :limit="1" @upload-success="handleUploadSuccess"></FileUpload>
@@ -33,10 +29,11 @@
 <script>
 import FileUpload from "@/components/common/FileUpload.vue";
 import * as unit_request from "@/api/admin/course/unit";
+import Editor from "@/components/common/Editor.vue";
 
 export default {
   name: "unitDialog",
-  components: {FileUpload},
+  components: {FileUpload, Editor},
   computed: {
     fileList() {
       return this.file_url?[this.file_url]:[]
@@ -79,7 +76,6 @@ export default {
     },
     open(chapter_id, item) {
       Object.assign(this.$data, this.$options.data())
-      console.log(this.file_url)
       this.chapter_id = chapter_id
       if(item)
         this.handleEdit(item)

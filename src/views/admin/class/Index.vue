@@ -131,8 +131,8 @@ export default {
       if(!items)
         return []
       for(let item of items){
-        item.createTime = this.$helper.parseTime(item.createTime)
-        item.updateTime = this.$helper.parseTime(item.updateTime)
+          item.createTime = this.$helper.parseTime(item.createTime)
+          item.updateTime = this.$helper.parseTime(item.updateTime)
       }
       return items
     },

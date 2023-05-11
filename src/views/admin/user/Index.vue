@@ -40,6 +40,14 @@
           label="ID">
       </el-table-column>
       <el-table-column
+          label="班级"
+          width="120">
+        <template v-slot="{row}">
+          <el-tag v-if="row.classInfo" type="success">{{ row.className }}</el-tag>
+          <span v-else style="color: grey">{{ row.className }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
           prop="username"
           label="用户名">
       </el-table-column>
@@ -89,7 +97,7 @@
   </div>
 
   <!-- 添加或修改参数配置对话框 -->
-  <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
+  <el-dialog :title="title" destroy-on-close :visible.sync="open" width="600px" append-to-body>
     <el-form ref="form" :model="form" :rules="rules" label-width="80px">
       <el-row>
         <el-col :span="12">
@@ -162,7 +170,7 @@
       </el-row>
 
       <el-form-item label="头像">
-        <FileUpload picture_mode :limit="1" :picture_url="avatarUrl" @upload-success="handleAvatarSuccess"></FileUpload>
+        <FileUpload picture_mode :picture_url="avatarUrl" @remove-file="form.avatar = null" @upload-success="handleAvatarSuccess"></FileUpload>
       </el-form-item>
     </el-form>
     <template v-slot:footer>
@@ -171,7 +179,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog title="选择班级" :visible.sync="open_class" width="450px" append-to-body>
+  <el-dialog title="选择班级" destroy-on-close :visible.sync="open_class" width="450px" append-to-body>
     <el-form ref="form" :model="class_form" label-width="80px">
       <el-form-item label="班级">
         <div style="display: flex;width: 100%;justify-content: space-between">
@@ -215,6 +223,7 @@ export default {
         item.updateTime = this.$helper.parseTime(item.updateTime)
         item.nickName = item.nickName || '（无昵称）'
         item.userType_text = this.$text.ROLE_TYPES[item.userType]
+        item.className = item.classInfo? item.classInfo.name: '（未分配）'
       }
       return items
     },
@@ -276,6 +285,7 @@ export default {
   methods: {
     handleAddToClass(item) {
       this.getALLClassItems()
+      this.class_form = this.$options.data().class_form
       this.class_form.userId = item.id
       this.open_class = true
     },
@@ -298,10 +308,11 @@ export default {
       this.$helper.resetForm(this.$refs.form)
     },
     submitToClassForm() {
-      class_student_request.add(this.class_form).then(() => {
-        this.$modal.msgSuccess('修改成功')
+      class_student_request.add(this.class_form).then((res) => {
+        this.$modal.msgSuccess(res.message)
         this.open_class = false
         this.class_form = {userId: null, classId: null}
+        this.getUserItems();
       })
     },
     submitForm: function() {

@@ -3,7 +3,7 @@
     <transition name="el-fade-in-linear">
       <div v-if="show_buttons" class="shadow">
         <el-tooltip class="item" effect="light" :content="`下载：${file.name}`" placement="bottom">
-          <el-button type="text" style="color: #fff;font-size: 20px;" icon="el-icon-download" @click="clickDownload(file.url)"></el-button>
+          <el-button type="text" style="color: #fff;font-size: 20px;" icon="el-icon-download" @click="clickDownload(file.fileKey)"></el-button>
         </el-tooltip>
 <!--        <el-tooltip class="item" effect="light" content="文件预览" placement="bottom">-->
 <!--          <el-button type="text" style="color: #fff;font-size: 20px;" v-if="isDocument"  icon="el-icon-view" @click="openPreviewDialog"></el-button>-->
@@ -13,7 +13,7 @@
 
     <img class="file-icon" :src="img || require('@/assets/img/file.webp')" alt="file">
     <span class="file-title">{{file.name}}</span>
-    <PreviewDialog ref="preview_dialog"></PreviewDialog>
+<!--    <PreviewDialog ref="preview_dialog"></PreviewDialog>-->
   </div>
 
 </template>
@@ -21,7 +21,7 @@
 <script>
 // import PreviewDialog from "@/components/backend/exam/answer/PreviewDialog.vue";
 import {mapGetters} from "vuex";
-
+import * as file_download from "@/api/file";
 export default {
   name: "FileItem",
   // components: {PreviewDialog},
@@ -50,8 +50,11 @@ export default {
     handleMouseLeave() {
       this.show_buttons = false
     },
-    clickDownload(url){
-      window.open(url)
+    clickDownload(fileUrl){
+      file_download.download(fileUrl).then(res => {
+        if(res.code === 200)
+          window.open(res.data)
+      })
     },
   }
 }

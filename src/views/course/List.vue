@@ -26,7 +26,7 @@
                     <el-collapse-transition>
                       <div v-show="item.show">
                         <div class="course-description">
-                          <span>{{ item.course.description }}</span>
+                          <Content :content="item.course.description"></Content>
                         </div>
                       </div>
                     </el-collapse-transition>
@@ -45,8 +45,6 @@
       </div>
       <el-empty v-else></el-empty>
     </div>
-
-
     <el-footer style="margin-top: 16px;">
       <el-pagination
           :current-page.sync="page_num"
@@ -60,21 +58,24 @@
 <script>
 import {getFileUrl} from "@/api/file";
 import * as course_request from "@/api/course";
+import {SHOW_TITLE} from "@/res/event-types";
+import Content from "@/components/common/Content.vue";
 export default {
   name: "CourseIndex",
+  components: {Content},
   computed: {
     courses() {
       let result = []
-
-      for (let _item of this.items) {
-        let item = this.$lodash.cloneDeep(_item)
-        item.image = item.course.imageKey? getFileUrl(item.course.imageKey): null;
-        item.id = item.course.id
-        item.name = item.course.name
-        item.startTime = this.$helper.parseTime(item.startTime);
-        item.endTime = this.$helper.parseTime(item.endTime);
-        result.push(item)
-      }
+      if(this.items && this.items.length)
+        for (let _item of this.items) {
+          let item = this.$lodash.cloneDeep(_item)
+          item.image = item.course.imageKey? getFileUrl(item.course.imageKey): require('@/assets/sign.png');
+          item.id = item.course.id
+          item.name = item.course.name
+          item.startTime = this.$helper.parseTime(item.startTime);
+          item.endTime = this.$helper.parseTime(item.endTime);
+          result.push(item)
+        }
 
       return result;
     },
@@ -97,6 +98,9 @@ export default {
   created() {
     this.getCourseItems();
   },
+  beforeDestroy() {
+    this.$bus.$emit(SHOW_TITLE, null)
+  },
   methods: {
     handleMouseEnter(item) {
       item.show = true
@@ -117,11 +121,11 @@ export default {
         query_value: this.query_value
       }).then((resp) => {
         if (resp.code === 200) {
-          console.log(resp.data.items)
           this.items = resp.data.items
-          this.total = resp.data.total
-          this.page_size = resp.data.pageSize
-          this.page_num = resp.data.pageNum
+          this.$bus.$emit(SHOW_TITLE, resp.data.class_info && resp.data.class_info.name)
+          this.total = resp.data.total || 0
+          this.page_size = resp.data.pageSize || 12
+          this.page_num = resp.data.pageNum || 1
         }
 
       })

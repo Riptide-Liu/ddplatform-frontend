@@ -62,7 +62,7 @@ service.interceptors.request.use(config => {
     config.params = {}
     config.url = url
   }
-
+  console.log('[request]', config.url)
   return config
 }, error => {
   console.log(error)
@@ -108,6 +108,7 @@ service.interceptors.response.use(res => {
     // if (res.data.data && res.data.data.total) {
     //   res.data.data.total = parseInt(res.data.data.total)
     // }
+    console.log('[response]', res.data)
     return res.data
   }
 },

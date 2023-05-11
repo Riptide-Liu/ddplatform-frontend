@@ -34,18 +34,23 @@
           type="selection"
           width="55">
       </el-table-column>
+<!--      <el-table-column-->
+<!--          prop="id"-->
+<!--          show-overflow-tooltip-->
+<!--          label="ID">-->
+<!--      </el-table-column>-->
       <el-table-column
-          prop="id"
-          show-overflow-tooltip
-          label="ID">
+          prop="imageUrl"
+          width="200"
+          label="封面">
+        <template v-slot:default="{row}">
+          <img v-if="row.imageUrl" :src="row.imageUrl" class="avatar">
+          <span v-else>（无）</span>
+        </template>
       </el-table-column>
       <el-table-column
           prop="name"
           label="课程名">
-      </el-table-column>
-      <el-table-column
-          prop="description"
-          label="描述">
       </el-table-column>
       <el-table-column
           prop="updateTime"
@@ -116,11 +121,7 @@
           label="简述"
           prop="description"
       >
-        <el-input
-            v-model="form.description"
-            placeholder="请输入课程名称"
-            maxlength="30"
-        />
+        <Editor v-model="form.description" placeholder="请输入课程名称" style="padding-top: 8px;margin-bottom: -8px"></Editor>
       </el-form-item>
       <el-form-item label="封面图片">
         <FileUpload picture_mode :picture_url="imageUrl" @upload-success="handleUploadSuccess"></FileUpload>
@@ -140,10 +141,11 @@ import * as course_request from "@/api/admin/course/index";
 import {mapGetters} from "vuex";
 import {getFileUrl} from "@/api/file";
 import FileUpload from "@/components/common/FileUpload.vue";
+import Editor from "@/components/common/Editor.vue";
 
 export default {
   name: "UserIndex",
-  components: {FileUpload},
+  components: {Editor, FileUpload},
   computed: {
     ...mapGetters(['$text', 'token']),
     tableData() {
@@ -151,6 +153,7 @@ export default {
       if(!items)
         return []
       for(let item of items){
+        item.imageUrl = item.imageKey?getFileUrl(item.imageKey):null
         item.createTime = this.$helper.parseTime(item.createTime)
         item.updateTime = this.$helper.parseTime(item.updateTime)
       }

@@ -10,34 +10,32 @@
       <el-collapse-transition>
         <div v-show="chapter.show">
           <div v-for="lesson in chapterLessons(chapter)" :key="lesson.id" style="font-size: 15px;padding: 5px;">
-            <router-link :to="`/course/${courseId}/unit/${lesson.id}`" >
-              <div class="el-tree-node__content" style="display: block; color: #606266;">
-                <div class="item">
-                  <div class="item-title">
-                    <template v-if="lesson.progress">
+            <div class="el-tree-node__content" style="display: block; color: #606266;" @click="handleClick(chapter, lesson)">
+              <div class="item">
+                <div class="item-title">
+                  <template v-if="lesson.progress">
                       <span style="margin-right: 4px;">
                         <i v-if="lesson.progress >= 1" style="color: green" class="el-icon-success"></i>
                         <i v-else class="el-icon-success"></i>
                       </span>
-                    </template>
-                    <i v-else class="el-icon-circle-check" style="margin-right: 4px;"></i>
-                    <span  style="font-size: 13px;">{{ lesson.title }}</span>
-                  </div>
-                  <div>
-                    <el-tag
-                        :type="lesson.environments_num?'warning':'success'"
-                        size="mini"
-                        effect="dark">
-                      {{lesson.environments_num?'实操':'理论'}}
-                    </el-tag>
-                    <!--                    <template v-if="lesson.progress">-->
-                    <!--                      <i v-if="lesson.progress >= 1" style="color: green" class="el-icon-circle-check"></i>-->
-                    <!--                      <i v-else class="el-icon-warning-outline"></i>-->
-                    <!--                    </template>-->
-                  </div>
+                  </template>
+                  <i v-else class="el-icon-circle-check" style="margin-right: 4px;"></i>
+                  <span  style="font-size: 13px;">{{ lesson.title }}</span>
+                </div>
+                <div>
+                  <el-tag
+                      :type="lesson.environments_num?'warning':'success'"
+                      size="mini"
+                      effect="dark">
+                    {{lesson.environments_num?'实操':'理论'}}
+                  </el-tag>
+                  <!--                    <template v-if="lesson.progress">-->
+                  <!--                      <i v-if="lesson.progress >= 1" style="color: green" class="el-icon-circle-check"></i>-->
+                  <!--                      <i v-else class="el-icon-warning-outline"></i>-->
+                  <!--                    </template>-->
                 </div>
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
       </el-collapse-transition>
@@ -50,6 +48,8 @@
 </template>
 
 <script>
+
+import {SHOW_TITLE} from "@/res/event-types";
 
 export default {
   name: "ChapterList",
@@ -100,6 +100,10 @@ export default {
     }
   },
   methods: {
+    handleClick(chapter, lesson) {
+      this.$bus.$emit(SHOW_TITLE, `${chapter.name}`)
+      this.$router.push(`/course/${this.courseId}/unit/${lesson.id}`)
+    },
     showLessons(item){
       item.show = !item.show
       this.$forceUpdate()

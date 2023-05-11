@@ -1,12 +1,12 @@
 <template>
 <el-card>
   <template v-slot:header>课程资源</template>
-  <div style="min-height: 570px;display: flex;flex-wrap: wrap">
+  <div v-if="resourceItems && resourceItems.length" style="min-height: 570px;display: flex;flex-wrap: wrap">
     <div v-for="resource of resourceItems" :key="resource.id">
       <FileItem :file="resource"></FileItem>
     </div>
-
   </div>
+  <el-empty v-else></el-empty>
 </el-card>
 </template>
 

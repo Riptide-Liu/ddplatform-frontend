@@ -9,7 +9,7 @@
               <el-icon class="el-icon-s-home"></el-icon>
             </div>
           </transition>
-          <el-image :src="itemData.banner" class="banner" fit="cover">
+          <el-image :src="itemData.banner" class="banner" fit="contain">
           </el-image>
         </div>
         <div class="class-text">{{ itemData.name }}</div>
@@ -44,7 +44,7 @@ export default {
           {index: `/course/${item.id}/student`, label: '我的同学', icon: 'el-icon-s-custom'},
           // {index: `/course/${item.id}/homework`, label: '我的作业', icon: 'el-icon-s-management'},
         ]
-      item.banner = item.imageKey?getFileUrl(item.imageKey):null
+      item.banner = item.imageKey?getFileUrl(item.imageKey):require('@/assets/sign.png')
       item.name = item.name || '（无名称）'
       return item
     }
